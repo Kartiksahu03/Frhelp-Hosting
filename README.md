@@ -1,10 +1,4 @@
-# FrHelp, Ecomzy & Portfolio READMEs — matching the Paisa style
-
-Same format as your Paisa README: centered header, badge links, feature list with emoji, architecture tree, local setup, roadmap, author footer. Fill in the `[ ]` placeholders — link URLs, exact folder names, and anything about internals only you know.
-
----
-
-## 1. FrHelp
+1. FrHelp
 
 ```markdown
 <div align="center">
