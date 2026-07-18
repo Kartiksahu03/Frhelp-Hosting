@@ -1,31 +1,40 @@
-# React & Tailwind CSS Starter Pack
+# FrHelp — AI-Powered EdTech Platform
 
-This is a starter pack for creating React projects with Tailwind CSS configured. It uses React version **18.2** and Tailwind CSS version **3.2**.
+[Live Demo](YOUR_LIVE_LINK) · [Portfolio](https://kartik-s-portfolio-tau.vercel.app/)
 
-## Usage
+![FrHelp Screenshot](ADD_SCREENSHOT_PATH_OR_URL)
 
-This starter pack includes a basic setup for using **Tailwind CSS with React**. To start building your own components and styles, follow these steps:
+A production-grade EdTech platform with role-based access, course enrollment, payments, and an AI assistant — built end-to-end with the MERN stack.
 
-1. Clone the repository to your local machine.
-    ```sh
-    git clone https://github.com/thepranaygupta/react-tailwind-css-starter-pack.git
-    ```
+## Features
+- 🔐 JWT authentication across 15+ protected routes
+- 👥 3 role types with RBAC: Student, Instructor, Admin
+- 📚 100+ courses with enrollment & progress tracking
+- 💳 Razorpay payment gateway — order creation, verification, enrollment automation
+- 🤖 Groq-powered AI assistant handling 10+ user intent categories
+- ☁️ Deployed on Vercel (frontend) + Render (backend) + MongoDB Atlas
 
-1. Install the required packages.
-    ```sh
-    cd react-tailwind-css-starter-pack
-    npm install
-    ```
+## Tech Stack
+React.js · Redux Toolkit · Node.js · Express.js · MongoDB Atlas · JWT · Razorpay · Groq AI · Cloudinary · Tailwind CSS
 
-1. Start the development server.
-    ```sh
-    npm start
-    ```
-1. Open the project in your browser at [`http://localhost:3000`](http://localhost:3000) to view your project.
-1. Create your React components and add your styles using Tailwind classes. You can also create new CSS files and import them into your components.
+## Architecture
+[ ] — a one-paragraph note on how the pieces fit together, e.g.: "React SPA calls a REST API built on Express. MongoDB stores users/courses/enrollments as separate collections linked by ObjectId refs. JWT middleware gates all `/api/protected/*` routes; role checks happen in a second middleware layer after auth."
 
-The project is set up to use `postcss-cli` to process your CSS files. You can add your own `tailwind.config.js` file to customize your Tailwind setup.
+## Getting Started
+\`\`\`bash
+git clone https://github.com/Kartiksahu03/[REPO_NAME].git
+cd [REPO_NAME]
+npm install
 
-## Contributing
+# backend .env
+MONGO_URI=[ ]
+JWT_SECRET=[ ]
+RAZORPAY_KEY_ID=[ ]
+RAZORPAY_KEY_SECRET=[ ]
+GROQ_API_KEY=[ ]
 
-Contributions are welcome! If you have any suggestions or find any issues, please feel free to open an issue or a pull request.
+npm run dev
+\`\`\`
+
+## What I'd improve next
+[ ] — one or two honest lines here (e.g. "add automated tests for the enrollment flow," "containerize with Docker") shows self-awareness and works in your favor in interviews.
