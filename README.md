@@ -1,3 +1,12 @@
+# FrHelp, Ecomzy & Portfolio READMEs — matching the Paisa style
+
+Same format as your Paisa README: centered header, badge links, feature list with emoji, architecture tree, local setup, roadmap, author footer. Fill in the `[ ]` placeholders — link URLs, exact folder names, and anything about internals only you know.
+
+---
+
+## 1. FrHelp
+
+```markdown
 <div align="center">
 
 # 🎓 FrHelp — AI-Powered EdTech Platform
@@ -6,7 +15,7 @@
 
 A full-stack learning platform with role-based access for students, instructors, and admins — course enrollment, progress tracking, payments, and a Groq-powered AI assistant, all built from scratch.
 
-[![Live Demo](https://img.shields.io/badge/Live_Demo-000?style=for-the-badge&logo=vercel&logoColor=white)]([ ]YOUR_LIVE_LINK)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-000?style=for-the-badge&logo=vercel&logoColor=white)](https://frhelp-frontend.vercel.app/)
 &nbsp;
 [![MERN](https://img.shields.io/badge/Stack-MERN-00C853?style=for-the-badge)](#tech-stack)
 &nbsp;
@@ -20,8 +29,10 @@ A full-stack learning platform with role-based access for students, instructors,
 
 ## 🔗 Links
 
-- **Live app:** [ ]YOUR_LIVE_LINK
-- **Source code:** https://github.com/Kartiksahu03/[ ]REPO_NAME
+- **Live app:** https://frhelp-frontend.vercel.app/
+- **Source code:** https://github.com/Kartiksahu03/Frhelp-Hosting
+- **Portfolio:** https://kartik-s-portfolio-tau.vercel.app
+- **LinkedIn:** https://linkedin.com/in/kartik-sahu03
 
 > ⚠️ The backend runs on Render's free tier, which sleeps after inactivity — the first load may take ~30–50 seconds to wake up.
 
@@ -56,3 +67,103 @@ A full-stack learning platform with role-based access for students, instructors,
 ---
 
 ## 🏗️ Architecture
+
+```
+frhelp/
+├── client/                 # React frontend
+│   └── src/
+│       ├── app/            # Redux store
+│       ├── features/       # auth · courses · enrollment · ai (slice + api each)
+│       ├── components/     # layout · course-cards · dashboard · ai-chat
+│       ├── pages/          # role-specific dashboards: Student · Instructor · Admin
+│       └── services/       # axios instance + JWT interceptors
+│
+└── server/                 # Express + MongoDB API
+    ├── models/             # User · Course · Enrollment · Payment
+    ├── controllers/        # auth · course · enrollment · payment · ai
+    ├── routes/             # one router per domain, role-gated
+    ├── middlewares/        # JWT protect · role-check · error handler
+    └── services/           # razorpayService.js · aiService.js
+```
+
+Role checks happen in a dedicated middleware layer after JWT verification, so each route declares which roles can access it rather than checking permissions inline in controllers.
+
+---
+
+## 🚀 Getting Started (Local)
+
+### Prerequisites
+- Node.js 18+
+- A [MongoDB Atlas](https://www.mongodb.com/atlas) connection string
+- A [Razorpay](https://razorpay.com/) test account (key ID + secret)
+- A free [Groq API key](https://console.groq.com/keys)
+
+### 1. Clone
+```bash
+git clone https://github.com/Kartiksahu03/Frhelp-Hosting.git
+cd Frhelp-Hosting
+```
+
+### 2. Backend
+```bash
+cd server
+npm install
+cp .env.example .env
+npm run dev
+```
+
+`server/.env`:
+```
+PORT=5000
+MONGO_URI=your_mongodb_atlas_uri
+JWT_SECRET=any_long_random_string
+JWT_EXPIRES_IN=7d
+RAZORPAY_KEY_ID=your_razorpay_key_id
+RAZORPAY_KEY_SECRET=your_razorpay_key_secret
+GROQ_API_KEY=your_groq_key
+CLIENT_URL=http://localhost:5173
+```
+
+### 3. Frontend
+```bash
+cd client
+npm install
+cp .env.example .env
+npm run dev
+```
+
+`client/.env`:
+```
+VITE_API_URL=http://localhost:5000/api
+```
+
+Open the printed URL and sign up as a Student, or seed an Instructor/Admin account [ ]describe how, if there's a seed script or manual DB flag.
+
+---
+
+## 🤖 How the AI Assistant Works
+
+[ ] — one or two lines on the actual mechanism, mirroring what you wrote for Paisa, e.g.: "User questions are sent to Groq with a fixed intent-category schema and few-shot examples; the classified intent routes to a handler that pulls the relevant course/enrollment data before responding."
+
+---
+
+## 🗺️ Roadmap
+
+- [ ] Automated test suite (Jest + Supertest)
+- [ ] Docker + docker-compose for one-command local setup
+- [ ] Instructor-side analytics dashboard
+- [ ] Email notifications for enrollment/payment confirmation
+
+---
+
+## 👤 Author
+
+**Kartik Sahu** — Full-Stack Developer
+[Portfolio](https://kartik-s-portfolio-tau.vercel.app) · [GitHub](https://github.com/Kartiksahu03) · [LinkedIn](https://linkedin.com/in/kartik-sahu03)
+
+---
+
+<div align="center">
+<sub>Built with the MERN stack, Razorpay, and Groq AI.</sub>
+</div>
+```
