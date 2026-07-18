@@ -1,113 +1,183 @@
-1. FrHelp
-
-```markdown
+<!-- ══════════════════════ BANNER ══════════════════════ -->
 <div align="center">
 
-# 🎓 FrHelp — AI-Powered EdTech Platform
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:6366F1,50:8B5CF6,100:EC4899&height=200&section=header&text=FrHelp&fontSize=72&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=AI-Powered%20EdTech%20Platform&descAlignY=60&descSize=22" width="100%"/>
 
-**Learn, enroll, and get help — with an AI that actually knows your course.**
+<!-- Typing animation -->
+<a href="https://frhelp-frontend.vercel.app/">
+<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=22&pause=1000&color=8B5CF6&center=true&vCenter=true&width=600&lines=100%2B+courses.+3+roles.+1+AI+assistant.;Learn%2C+enroll%2C+and+get+help+%E2%80%94+with+AI+that+knows+your+course.;Built+end-to-end+with+the+MERN+stack." alt="Typing SVG" />
+</a>
 
-A full-stack learning platform with role-based access for students, instructors, and admins — course enrollment, progress tracking, payments, and a Groq-powered AI assistant, all built from scratch.
+<br/><br/>
 
-[![Live Demo](https://img.shields.io/badge/Live_Demo-000?style=for-the-badge&logo=vercel&logoColor=white)](https://frhelp-frontend.vercel.app/)
+<!-- Primary CTA badges -->
+<a href="https://frhelp-frontend.vercel.app/"><img src="https://img.shields.io/badge/🚀_LIVE_DEMO-6366F1?style=for-the-badge&logoColor=white" height="34"/></a>
 &nbsp;
-[![MERN](https://img.shields.io/badge/Stack-MERN-00C853?style=for-the-badge)](#tech-stack)
+<a href="https://github.com/Kartiksahu03/Frhelp-Hosting"><img src="https://img.shields.io/badge/⭐_SOURCE_CODE-181717?style=for-the-badge&logo=github&logoColor=white" height="34"/></a>
 &nbsp;
-[![Groq](https://img.shields.io/badge/AI-Groq_LLaMA_3.3-FF6F00?style=for-the-badge)](#)
-&nbsp;
-[![Razorpay](https://img.shields.io/badge/Payments-Razorpay-0C2451?style=for-the-badge)](#)
+<a href="https://kartik-s-portfolio-tau.vercel.app"><img src="https://img.shields.io/badge/🌐_PORTFOLIO-EC4899?style=for-the-badge&logoColor=white" height="34"/></a>
+
+<br/><br/>
+
+<!-- Tech pills -->
+<img src="https://img.shields.io/badge/MERN-00C853?style=flat-square&logoColor=white"/>
+<img src="https://img.shields.io/badge/Groq_LLaMA_3.3-FF6F00?style=flat-square&logo=meta&logoColor=white"/>
+<img src="https://img.shields.io/badge/Razorpay-0C2451?style=flat-square&logo=razorpay&logoColor=white"/>
+<img src="https://img.shields.io/badge/JWT_Auth-000000?style=flat-square&logo=jsonwebtokens&logoColor=white"/>
+<img src="https://img.shields.io/github/last-commit/Kartiksahu03/Frhelp-Hosting?style=flat-square&color=8B5CF6"/>
 
 </div>
 
----
+<br/>
 
-## 🔗 Links
+> [!NOTE]
+> The backend runs on Render's free tier and sleeps after inactivity — **first load may take ~30–50 seconds** to wake up. Give it a moment. ☕
 
-- **Live app:** https://frhelp-frontend.vercel.app/
-- **Source code:** https://github.com/Kartiksahu03/Frhelp-Hosting
-- **Portfolio:** https://kartik-s-portfolio-tau.vercel.app
-- **LinkedIn:** https://linkedin.com/in/kartik-sahu03
+<!-- ══════════════════════ DIVIDER ══════════════════════ -->
+<img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png" width="100%"/>
 
-> ⚠️ The backend runs on Render's free tier, which sleeps after inactivity — the first load may take ~30–50 seconds to wake up.
+## 🎯 What is FrHelp?
 
----
+**FrHelp** is a production-grade EdTech platform where students enroll in courses, instructors publish them, and admins run the show — with a **Groq-powered AI assistant** that actually understands what users are asking for. Not a tutorial project: JWT-secured, payment-integrated, and deployed across three services.
+
+<br/>
+
+<!-- ══════════════════════ FEATURES ══════════════════════ -->
+<div align="center">
 
 ## ✨ Features
 
-- **👥 Role-based access** — separate Student, Instructor, and Admin experiences, all enforced server-side, not just hidden in the UI.
-- **🔐 15+ protected routes** — JWT authentication and authorization middleware guard every sensitive endpoint.
-- **📚 Course management** — 100+ courses with enrollment, progress tracking, and instructor-side course creation.
-- **💳 Integrated payments** — Razorpay handles order creation, payment verification, and automatic enrollment on success.
-- **🤖 AI assistant** — Groq-powered assistant classifies 10+ user intent categories (e.g. "how do I enroll," "where's my progress," "refund policy") and responds accordingly, cutting down manual support load.
-- **📱 Responsive UI** — built with React and Tailwind CSS, works cleanly across screen sizes.
-- **☁️ Production deployment** — Vercel (frontend) + Render (backend) + MongoDB Atlas (database).
+</div>
 
----
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### 🔐 Auth & Access
+- **JWT authentication** across **15+ protected routes**
+- **Role-Based Access Control** — 3 distinct roles
+- Server-side enforcement (not just hidden UI)
+
+</td>
+<td width="50%" valign="top">
+
+### 👥 Three Roles, Three Experiences
+- 🎓 **Student** — browse, enroll, track progress
+- 🧑‍🏫 **Instructor** — create & manage courses
+- 🛡️ **Admin** — full platform control
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+### 📚 Courses & Payments
+- **100+ courses** with enrollment & progress tracking
+- **Razorpay** — order creation → verification → auto-enrollment
+- Instructor-side course creation flow
+
+</td>
+<td width="50%" valign="top">
+
+### 🤖 AI Assistant
+- Built on **Groq LLM (LLaMA 3.3)**
+- Classifies **10+ user intent categories**
+- Cuts down manual support load
+
+</td>
+</tr>
+</table>
+
+<!-- ══════════════════════ DIVIDER ══════════════════════ -->
+<img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png" width="100%"/>
+
+<!-- ══════════════════════ TECH STACK ══════════════════════ -->
+<div align="center">
 
 ## 🛠️ Tech Stack
 
-**Frontend:** React.js · Redux Toolkit · Tailwind CSS · Axios
+<img src="https://skillicons.dev/icons?i=react,redux,tailwind,nodejs,express,mongodb,vercel&theme=dark" />
 
-**Backend:** Node.js · Express.js · MongoDB (Mongoose) · JWT
+<br/><br/>
 
-**Payments:** Razorpay
+| Layer | Technologies |
+|:---:|:---|
+| **Frontend** | React.js · Redux Toolkit · Tailwind CSS · Axios |
+| **Backend** | Node.js · Express.js · MongoDB (Mongoose) · JWT |
+| **Payments** | Razorpay |
+| **AI** | Groq API (LLaMA 3.3) — intent classification |
+| **Storage** | Cloudinary |
+| **Deploy** | Vercel · Render · MongoDB Atlas |
 
-**AI:** Groq API (LLaMA 3.3) — intent classification & assistant responses
+</div>
 
-**Storage:** Cloudinary (media)
-
-**Deployment:** Vercel · Render · MongoDB Atlas
-
----
+<!-- ══════════════════════ DIVIDER ══════════════════════ -->
+<img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png" width="100%"/>
 
 ## 🏗️ Architecture
 
 ```
 frhelp/
-├── client/                 # React frontend
+├── 🎨 client/                 # React frontend
 │   └── src/
-│       ├── app/            # Redux store
-│       ├── features/       # auth · courses · enrollment · ai (slice + api each)
-│       ├── components/     # layout · course-cards · dashboard · ai-chat
-│       ├── pages/          # role-specific dashboards: Student · Instructor · Admin
-│       └── services/       # axios instance + JWT interceptors
+│       ├── app/              # Redux store
+│       ├── features/         # auth · courses · enrollment · ai
+│       ├── components/       # layout · course-cards · dashboard · ai-chat
+│       ├── pages/            # Student · Instructor · Admin dashboards
+│       └── services/         # axios instance + JWT interceptors
 │
-└── server/                 # Express + MongoDB API
-    ├── models/             # User · Course · Enrollment · Payment
-    ├── controllers/        # auth · course · enrollment · payment · ai
-    ├── routes/             # one router per domain, role-gated
-    ├── middlewares/        # JWT protect · role-check · error handler
-    └── services/           # razorpayService.js · aiService.js
+└── ⚙️ server/                 # Express + MongoDB API
+    ├── models/              # User · Course · Enrollment · Payment
+    ├── controllers/         # auth · course · enrollment · payment · ai
+    ├── routes/              # one router per domain, role-gated
+    ├── middlewares/         # JWT protect · role-check · error handler
+    └── services/            # razorpayService · aiService
 ```
 
-Role checks happen in a dedicated middleware layer after JWT verification, so each route declares which roles can access it rather than checking permissions inline in controllers.
+> Role checks live in a dedicated middleware layer *after* JWT verification — each route declares which roles may access it, instead of scattering permission logic through controllers.
 
----
+<!-- ══════════════════════ AI FLOW ══════════════════════ -->
+## 🧠 How the AI Assistant Works
 
-## 🚀 Getting Started (Local)
+```mermaid
+flowchart LR
+    A[👤 User message] --> B[🎯 Groq LLM<br/>intent classification]
+    B --> C{10+ intent<br/>categories}
+    C -->|enroll| D[📚 Enrollment handler]
+    C -->|progress| E[📊 Progress handler]
+    C -->|support| F[💬 Support handler]
+    D & E & F --> G[✅ Grounded response]
+    style A fill:#6366F1,color:#fff
+    style B fill:#FF6F00,color:#fff
+    style G fill:#00C853,color:#fff
+```
 
-### Prerequisites
-- Node.js 18+
-- A [MongoDB Atlas](https://www.mongodb.com/atlas) connection string
-- A [Razorpay](https://razorpay.com/) test account (key ID + secret)
-- A free [Groq API key](https://console.groq.com/keys)
+<!-- ══════════════════════ QUICKSTART ══════════════════════ -->
+<img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png" width="100%"/>
 
-### 1. Clone
+## 🚀 Quick Start
+
+<details>
+<summary><b>📦 Click to expand setup instructions</b></summary>
+
+<br/>
+
+**Prerequisites:** Node.js 18+ · [MongoDB Atlas](https://www.mongodb.com/atlas) · [Razorpay test keys](https://razorpay.com/) · [Groq API key](https://console.groq.com/keys)
+
 ```bash
+# 1. Clone
 git clone https://github.com/Kartiksahu03/Frhelp-Hosting.git
 cd Frhelp-Hosting
-```
 
-### 2. Backend
-```bash
+# 2. Backend
 cd server
 npm install
-cp .env.example .env
+cp .env.example .env      # fill in values below
 npm run dev
 ```
 
 `server/.env`:
-```
+```env
 PORT=5000
 MONGO_URI=your_mongodb_atlas_uri
 JWT_SECRET=any_long_random_string
@@ -118,46 +188,42 @@ GROQ_API_KEY=your_groq_key
 CLIENT_URL=http://localhost:5173
 ```
 
-### 3. Frontend
 ```bash
+# 3. Frontend (new terminal)
 cd client
 npm install
-cp .env.example .env
+cp .env.example .env      # VITE_API_URL=http://localhost:5000/api
 npm run dev
 ```
 
-`client/.env`:
-```
-VITE_API_URL=http://localhost:5000/api
-```
+Open `http://localhost:5173` and sign up. 🎉
 
-Open the printed URL and sign up as a Student, or seed an Instructor/Admin account [ ]describe how, if there's a seed script or manual DB flag.
+</details>
 
----
-
-## 🤖 How the AI Assistant Works
-
-[ ] — one or two lines on the actual mechanism, mirroring what you wrote for Paisa, e.g.: "User questions are sent to Groq with a fixed intent-category schema and few-shot examples; the classified intent routes to a handler that pulls the relevant course/enrollment data before responding."
-
----
-
+<!-- ══════════════════════ ROADMAP ══════════════════════ -->
 ## 🗺️ Roadmap
 
-- [ ] Automated test suite (Jest + Supertest)
-- [ ] Docker + docker-compose for one-command local setup
-- [ ] Instructor-side analytics dashboard
-- [ ] Email notifications for enrollment/payment confirmation
+- [ ] 🧪 Automated test suite (Jest + Supertest)
+- [ ] 🐳 Docker + docker-compose for one-command setup
+- [ ] 📈 Instructor-side analytics dashboard
+- [ ] 📧 Email notifications for enrollment/payment
 
----
-
-## 👤 Author
-
-**Kartik Sahu** — Full-Stack Developer
-[Portfolio](https://kartik-s-portfolio-tau.vercel.app) · [GitHub](https://github.com/Kartiksahu03) · [LinkedIn](https://linkedin.com/in/kartik-sahu03)
-
----
+<!-- ══════════════════════ FOOTER ══════════════════════ -->
+<img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png" width="100%"/>
 
 <div align="center">
-<sub>Built with the MERN stack, Razorpay, and Groq AI.</sub>
+
+## 👤 Built by Kartik Sahu
+
+Full-Stack Developer · MERN + AI Integration
+
+<a href="https://kartik-s-portfolio-tau.vercel.app"><img src="https://img.shields.io/badge/Portfolio-EC4899?style=for-the-badge&logo=vercel&logoColor=white"/></a>
+<a href="https://github.com/Kartiksahu03"><img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white"/></a>
+<a href="https://linkedin.com/in/kartik-sahu03"><img src="https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white"/></a>
+<a href="mailto:kartik.sahu3311@gmail.com"><img src="https://img.shields.io/badge/Email-D14836?style=for-the-badge&logo=gmail&logoColor=white"/></a>
+
+<br/><br/>
+
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:EC4899,50:8B5CF6,100:6366F1&height=100&section=footer" width="100%"/>
+
 </div>
-```
