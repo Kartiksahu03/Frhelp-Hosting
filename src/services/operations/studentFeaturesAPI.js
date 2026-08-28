@@ -38,40 +38,49 @@ function getPaymentExperimentConfig() {
   }
 }
 
-async function recordFailedPayment(response, orderData) {
+async function recordFailedPayment(response, orderData, userDetails) {
   try {
     const experimentConfig = getPaymentExperimentConfig();
 
     // Normal FrHelp payments should continue without experiment tracking
     if (!experimentConfig) {
-      return;
+      return null;
     }
 
     const error = response?.error;
 
     if (!error?.code || !error?.reason) {
       console.log("RAZORPAY FAILURE DATA MISSING:", response);
-      return;
+      return null;
     }
 
-    await apiConnector("POST", RECORD_FAILED_PAYMENT_API, {
-      experimentId: experimentConfig.experimentId,
-      strategy: experimentConfig.strategy,
-      scenarioId: experimentConfig.scenarioId,
-      amount: orderData.amount,
-      currency: orderData.currency,
-      orderId: error.metadata?.order_id || orderData.id,
-      paymentId: error.metadata?.payment_id || "",
-      error: {
-        code: error.code,
-        description: error.description,
-        source: error.source,
-        step: error.step,
-        reason: error.reason,
-      },
-    });
+    const recoveryResponse = await apiConnector(
+      "POST",
+      RECORD_FAILED_PAYMENT_API,
+      {
+        experimentId: experimentConfig.experimentId,
+        strategy: experimentConfig.strategy,
+        scenarioId: experimentConfig.scenarioId,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        customerName: `${userDetails?.firstName || ""} ${userDetails?.lastName || ""}`.trim(),
+        customerEmail: userDetails?.email || "",
+        orderId: error.metadata?.order_id || orderData.id,
+        paymentId: error.metadata?.payment_id || "",
+        error: {
+          code: error.code,
+          description: error.description,
+          source: error.source,
+          step: error.step,
+          reason: error.reason,
+        },
+      }
+    );
+
+    return recoveryResponse.data?.data || null;
   } catch (error) {
     console.log("FAILED PAYMENT TRACKING ERROR:", error);
+    return null;
   }
 }
 
@@ -123,7 +132,19 @@ export async function buyCourse(token, courses, userDetails, navigate, dispatch)
     paymentObject.on("payment.failed", async function (response) {
       console.log("RAZORPAY PAYMENT FAILED:", response);
 
-      await recordFailedPayment(response, orderResponse.data.data);
+      const recoveryDecision = await recordFailedPayment(
+        response,
+        orderResponse.data.data,
+        userDetails
+      );
+
+      if (recoveryDecision) {
+        console.log("PAYMENT RECOVERY DECISION:", {
+          action: recoveryDecision.chosenAction,
+          executionStatus: recoveryDecision.executionStatus,
+          executionNote: recoveryDecision.executionNote,
+        });
+      }
 
       toast.error("Payment failed");
     });
@@ -158,7 +179,7 @@ async function verifyPayment(bodyData, navigate, dispatch) {
       bodyData
     )
 
-    console.log("VERIFY RESPONSE:", response) // 👈 ADD THIS
+    console.log("VERIFY RESPONSE:", response)
 
     if (!response.data.success) {
       throw new Error(response.data.message)
@@ -168,7 +189,6 @@ async function verifyPayment(bodyData, navigate, dispatch) {
 
     dispatch(resetCart())
 
-    // ✅ FORCE REFRESH USER DATA (IMPORTANT)
     window.location.href = "/dashboard/enrolled-courses"
 
   } catch (error) {
