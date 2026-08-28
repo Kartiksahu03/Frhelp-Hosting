@@ -1,5 +1,7 @@
 const Groq = require("groq-sdk")
 const PaymentExperiment = require("../models/PaymentExperiment")
+const mailSender = require("../utils/mailSender")
+const { instance } = require("../config/razorpay")
 const {
   ALLOWED_ACTIONS,
   validateRecoveryAction,
@@ -47,6 +49,138 @@ const getAIAction = async (errorData) => {
   return validateRecoveryAction(parsed.action)
 }
 
+const createRecoveryEmail = (customerName, message) => {
+  return `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #222;">
+      <h2>FrHelp Payment Update</h2>
+      <p>Hi ${customerName || "Learner"},</p>
+      <p>${message}</p>
+      <p>Your course access will only be provided after a successful verified payment.</p>
+      <p>Thank you,<br/>FrHelp Team</p>
+    </div>
+  `
+}
+
+const executeRecoveryAction = async (paymentRecord) => {
+  const action = paymentRecord.chosenAction
+
+  if (action === "do_nothing") {
+    paymentRecord.actionExecuted = false
+    paymentRecord.executionStatus = "not_required"
+    paymentRecord.executionNote = "No recovery action was required"
+    await paymentRecord.save()
+    return paymentRecord
+  }
+
+  if (action === "retry_now") {
+    paymentRecord.actionExecuted = true
+    paymentRecord.executionStatus = "waiting_for_retry"
+    paymentRecord.executionNote = "Customer must start a fresh Razorpay Checkout retry"
+    await paymentRecord.save()
+    return paymentRecord
+  }
+
+  if (action === "send_reminder") {
+    if (!paymentRecord.customerEmail) {
+      paymentRecord.executionStatus = "failed"
+      paymentRecord.executionNote = "Customer email was not available for reminder"
+      await paymentRecord.save()
+      return paymentRecord
+    }
+
+    const emailResult = await mailSender(
+      paymentRecord.customerEmail,
+      "Complete your FrHelp course payment",
+      createRecoveryEmail(
+        paymentRecord.customerName,
+        "Your payment was not completed. You can return to FrHelp and try the payment again."
+      )
+    )
+
+    paymentRecord.actionExecuted = emailResult.success
+    paymentRecord.executionStatus = emailResult.success ? "executed" : "failed"
+    paymentRecord.executionNote = emailResult.success
+      ? "Payment reminder email sent"
+      : "Payment reminder email could not be sent"
+    await paymentRecord.save()
+    return paymentRecord
+  }
+
+  if (action === "retry_later") {
+    if (!paymentRecord.customerEmail) {
+      paymentRecord.executionStatus = "failed"
+      paymentRecord.executionNote = "Customer email was not available for retry-later message"
+      await paymentRecord.save()
+      return paymentRecord
+    }
+
+    const emailResult = await mailSender(
+      paymentRecord.customerEmail,
+      "Try your FrHelp payment again later",
+      createRecoveryEmail(
+        paymentRecord.customerName,
+        "The payment could not be completed right now. Please wait and try again later from your FrHelp account."
+      )
+    )
+
+    paymentRecord.actionExecuted = emailResult.success
+    paymentRecord.executionStatus = emailResult.success ? "executed" : "failed"
+    paymentRecord.executionNote = emailResult.success
+      ? "Retry-later email sent"
+      : "Retry-later email could not be sent"
+    await paymentRecord.save()
+    return paymentRecord
+  }
+
+  if (action === "send_upi_link") {
+    // Razorpay does not support UPI Payment Links in Test Mode.
+    // Keep this exception visible instead of pretending a UPI link was sent.
+    if (process.env.RAZORPAY_KEY?.startsWith("rzp_test_")) {
+      paymentRecord.actionExecuted = false
+      paymentRecord.executionStatus = "exception"
+      paymentRecord.executionNote = "UPI Payment Links are not supported in Razorpay Test Mode"
+      await paymentRecord.save()
+      return paymentRecord
+    }
+
+    try {
+      const paymentLink = await instance.paymentLink.create({
+        upi_link: true,
+        amount: paymentRecord.amount,
+        currency: paymentRecord.currency || "INR",
+        reference_id: `rec_${paymentRecord._id}`.slice(0, 40),
+        description: "FrHelp course payment recovery",
+        customer: {
+          name: paymentRecord.customerName || "FrHelp Learner",
+          email: paymentRecord.customerEmail,
+        },
+        reminder_enable: true,
+        notes: {
+          experimentId: paymentRecord.experimentId,
+          strategy: paymentRecord.strategy,
+          originalPaymentId: paymentRecord.paymentId || "",
+        },
+      })
+
+      paymentRecord.actionExecuted = true
+      paymentRecord.executionStatus = "executed"
+      paymentRecord.executionNote = "UPI Payment Link created"
+      paymentRecord.recoveryLink = paymentLink.short_url || ""
+      await paymentRecord.save()
+      return paymentRecord
+    } catch (error) {
+      console.error("UPI LINK CREATION ERROR:", error)
+      paymentRecord.actionExecuted = false
+      paymentRecord.executionStatus = "failed"
+      paymentRecord.executionNote = "UPI Payment Link could not be created"
+      await paymentRecord.save()
+      return paymentRecord
+    }
+  }
+
+  return paymentRecord
+}
+
 exports.recordFailedPayment = async (req, res) => {
   try {
     const {
@@ -55,6 +189,8 @@ exports.recordFailedPayment = async (req, res) => {
       scenarioId,
       amount,
       currency,
+      customerName,
+      customerEmail,
       orderId,
       paymentId,
       error,
@@ -114,12 +250,14 @@ exports.recordFailedPayment = async (req, res) => {
       }
     }
 
-    const paymentRecord = await PaymentExperiment.create({
+    let paymentRecord = await PaymentExperiment.create({
       experimentId,
       strategy,
       scenarioId,
       amount,
       currency: currency || "INR",
+      customerName: customerName || "",
+      customerEmail: customerEmail || "",
       orderId,
       paymentId,
       error_code: error.code,
@@ -131,9 +269,11 @@ exports.recordFailedPayment = async (req, res) => {
       actionSource,
     })
 
+    paymentRecord = await executeRecoveryAction(paymentRecord)
+
     return res.status(200).json({
       success: true,
-      message: "Real payment failure recorded",
+      message: "Real payment failure recorded and recovery action processed",
       data: paymentRecord,
     })
   } catch (error) {
