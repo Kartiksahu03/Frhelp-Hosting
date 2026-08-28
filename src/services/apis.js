@@ -23,6 +23,13 @@ export const studentEndpoints = {
   SEND_PAYMENT_SUCCESS_EMAIL_API: BASE_URL + "/payment/sendPaymentSuccessEmail",
 }
 
+// PAYMENT RECOVERY ENDPOINTS
+export const paymentRecoveryEndpoints = {
+  RECORD_FAILED_PAYMENT_API: BASE_URL + "/payment-recovery/failed-payment",
+  RECORD_RECOVERY_RESULT_API: BASE_URL + "/payment-recovery/recovery-result",
+  GET_RECOVERY_ANALYTICS_API: BASE_URL + "/payment-recovery/analytics",
+}
+
 // COURSE ENDPOINTS
 export const courseEndpoints = {
   GET_ALL_COURSE_API: BASE_URL + "/course/getAllCourses",
