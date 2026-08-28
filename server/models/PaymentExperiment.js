@@ -23,6 +23,8 @@ const paymentExperimentSchema = new mongoose.Schema(
       type: String,
       default: "INR",
     },
+    customerName: String,
+    customerEmail: String,
     orderId: String,
     paymentId: String,
     error_code: String,
@@ -46,6 +48,24 @@ const paymentExperimentSchema = new mongoose.Schema(
       enum: ["baseline", "ai", "rule_fallback"],
       required: true,
     },
+    actionExecuted: {
+      type: Boolean,
+      default: false,
+    },
+    executionStatus: {
+      type: String,
+      enum: [
+        "pending",
+        "executed",
+        "waiting_for_retry",
+        "exception",
+        "not_required",
+        "failed",
+      ],
+      default: "pending",
+    },
+    executionNote: String,
+    recoveryLink: String,
     recoveryStatus: {
       type: String,
       enum: ["pending", "recovered", "unrecovered"],
