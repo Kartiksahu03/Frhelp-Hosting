@@ -9,6 +9,7 @@ const instance = new Razorpay({
 
 const TOTAL_ATTEMPTS = 200
 const DEFAULT_AMOUNT = 10000
+const REQUEST_DELAY_MS = 500
 
 const scenarioIds = [
   "card_declined",
@@ -17,6 +18,8 @@ const scenarioIds = [
   "payment_cancelled",
   "bank_timeout",
 ]
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 const buildPlan = (strategy, experimentId) => {
   const plan = []
@@ -46,26 +49,47 @@ const createOrders = async (strategy, experimentId) => {
   console.log("Orders are created only. Payment success/failure must come from Razorpay Checkout using supported test credentials.")
 
   for (const item of plan) {
-    const order = await instance.orders.create({
-      amount: item.amount,
-      currency: item.currency,
-      receipt: `${experimentId}_${item.runNumber}`.slice(0, 40),
-      notes: {
-        experimentId: item.experimentId,
+    try {
+      const order = await instance.orders.create({
+        amount: item.amount,
+        currency: item.currency,
+        receipt: `${experimentId}_${item.runNumber}`.slice(0, 40),
+        notes: {
+          experimentId: item.experimentId,
+          strategy: item.strategy,
+          scenarioId: item.scenarioId,
+          runNumber: String(item.runNumber),
+        },
+      })
+
+      console.log(JSON.stringify({
+        runNumber: item.runNumber,
         strategy: item.strategy,
         scenarioId: item.scenarioId,
-        runNumber: String(item.runNumber),
-      },
-    })
+        orderId: order.id,
+        amount: order.amount,
+        currency: order.currency,
+      }))
 
-    console.log(JSON.stringify({
-      runNumber: item.runNumber,
-      strategy: item.strategy,
-      scenarioId: item.scenarioId,
-      orderId: order.id,
-      amount: order.amount,
-      currency: order.currency,
-    }))
+      await sleep(REQUEST_DELAY_MS)
+    } catch (error) {
+      console.error("ORDER CREATION ERROR:", {
+        runNumber: item.runNumber,
+        strategy: item.strategy,
+        scenarioId: item.scenarioId,
+        statusCode: error.statusCode || error.status,
+        message: error.message,
+        error: error.error,
+      })
+
+      if ((error.statusCode || error.status) === 429) {
+        console.log("Razorpay rate limit reached. Waiting before retrying this order...")
+        await sleep(3000)
+        continue
+      }
+
+      throw error
+    }
   }
 }
 
@@ -79,5 +103,6 @@ if (!["baseline", "ai"].includes(strategy) || !experimentId) {
 
 createOrders(strategy, experimentId).catch((error) => {
   console.error("EXPERIMENT ORDER CREATION ERROR:", error.message)
+  console.error(error)
   process.exit(1)
 })
