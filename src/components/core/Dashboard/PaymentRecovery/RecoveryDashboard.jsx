@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
-import { paymentRecoveryEndpoints } from "../../../services/apis"
-import { apiConnector } from "../../../services/apiconnector"
+import { paymentRecoveryEndpoints } from "../../../../services/apis"
+import { apiConnector } from "../../../../services/apiconnector"
 
 function MetricCard({ title, baseline, ai, difference }) {
   return (
