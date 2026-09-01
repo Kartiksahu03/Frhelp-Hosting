@@ -1,9 +1,15 @@
+require("dotenv").config();
+
 const { Resend } = require("resend");
 
 const mailSender = async (email, title, body) => {
   try {
     if (!process.env.RESEND_API_KEY) {
-      throw new Error("RESEND_API_KEY is missing from server environment");
+      console.error("❌ RESEND_API_KEY is missing");
+      return {
+        success: false,
+        error: "RESEND_API_KEY is missing",
+      };
     }
 
     const resend = new Resend(process.env.RESEND_API_KEY);
@@ -18,7 +24,11 @@ const mailSender = async (email, title, body) => {
     });
 
     if (response.error) {
-      throw new Error(response.error.message || "Resend email failed");
+      console.error("❌ RESEND EMAIL ERROR:", response.error);
+      return {
+        success: false,
+        error: response.error.message,
+      };
     }
 
     console.log("✅ RESEND EMAIL SUCCESS:", response);
