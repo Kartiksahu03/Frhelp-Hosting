@@ -7,8 +7,10 @@ const {
   getRecoveryAnalytics,
 } = require("../controllers/PaymentRecovery")
 
-router.post("/failed-payment", recordFailedPayment)
-router.post("/recovery-result", recordRecoveryResult)
-router.get("/analytics", getRecoveryAnalytics)
+const { auth, isInstructor } = require("../middlewares/auth")
+
+router.post("/failed-payment", auth, recordFailedPayment)
+router.post("/recovery-result", auth, recordRecoveryResult)
+router.get("/analytics", auth, isInstructor, getRecoveryAnalytics)
 
 module.exports = router
