@@ -1,3 +1,4 @@
+require("dotenv").config();
 
 const express = require("express");
 const app = express();
@@ -15,21 +16,16 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const { cloudinaryConnect } = require("./config/cloudinary");
 const fileUpload = require("express-fileupload");
-const dotenv = require("dotenv");
 
-dotenv.config();
 const PORT = process.env.PORT || 4000;
-console.log("🚀 FORCE REDEPLOY V2");
-// ================= DATABASE =================
-database.connect();
 
+database.connect();
 
 app.use(cors({
   origin: true,
   credentials: true,
 }));
 
-// ================= MIDDLEWARE =================
 app.use(express.json());
 app.use(cookieParser());
 
@@ -40,10 +36,8 @@ app.use(
   })
 );
 
-// ================= CLOUDINARY =================
 cloudinaryConnect();
 
-// ================= ROUTES =================
 app.use("/api/v1/auth", userRoutes);
 app.use("/api/v1/profile", profileRoutes);
 app.use("/api/v1/course", courseRoutes);
@@ -52,7 +46,6 @@ app.use("/api/v1/payment-recovery", paymentRecoveryRoutes);
 app.use("/api/v1/reach", contactUsRoute);
 app.use("/api/v1/AI", aiRoutes);
 
-// ================= DEFAULT ROUTE =================
 app.get("/", (req, res) => {
   return res.json({
     success: true,
@@ -60,7 +53,6 @@ app.get("/", (req, res) => {
   });
 });
 
-// ================= START SERVER =================
 app.listen(PORT, () => {
   console.log(`🚀 Server running on ${PORT}`);
 });
