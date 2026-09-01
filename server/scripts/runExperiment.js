@@ -9,7 +9,8 @@ const instance = new Razorpay({
 
 const TOTAL_ATTEMPTS = 200
 const DEFAULT_AMOUNT = 10000
-const REQUEST_DELAY_MS = 500
+const REQUEST_DELAY_MS = 2000
+const MAX_RATE_LIMIT_RETRIES = 8
 
 const scenarioIds = [
   "card_declined",
@@ -38,6 +39,53 @@ const buildPlan = (strategy, experimentId) => {
   return plan
 }
 
+const createOrder = async (item) => {
+  let rateLimitRetryCount = 0
+
+  while (true) {
+    try {
+      return await instance.orders.create({
+        amount: item.amount,
+        currency: item.currency,
+        receipt: `${item.experimentId}_${item.runNumber}`.slice(0, 40),
+        notes: {
+          experimentId: item.experimentId,
+          strategy: item.strategy,
+          scenarioId: item.scenarioId,
+          runNumber: String(item.runNumber),
+        },
+      })
+    } catch (error) {
+      const statusCode = error.statusCode || error.status
+
+      console.error("ORDER CREATION ERROR:", {
+        runNumber: item.runNumber,
+        strategy: item.strategy,
+        scenarioId: item.scenarioId,
+        statusCode,
+        message: error.message,
+        error: error.error,
+      })
+
+      if (statusCode !== 429 || rateLimitRetryCount >= MAX_RATE_LIMIT_RETRIES) {
+        throw error
+      }
+
+      rateLimitRetryCount += 1
+      const retryDelay = Math.min(
+        REQUEST_DELAY_MS * Math.pow(2, rateLimitRetryCount),
+        30000
+      )
+
+      console.log(
+        `Rate limit reached. Waiting ${retryDelay}ms before retry ${rateLimitRetryCount}/${MAX_RATE_LIMIT_RETRIES}...`
+      )
+
+      await sleep(retryDelay)
+    }
+  }
+}
+
 const createOrders = async (strategy, experimentId) => {
   if (!process.env.RAZORPAY_KEY || !process.env.RAZORPAY_SECRET) {
     throw new Error("RAZORPAY_KEY and RAZORPAY_SECRET are required")
@@ -46,51 +94,35 @@ const createOrders = async (strategy, experimentId) => {
   const plan = buildPlan(strategy, experimentId)
 
   console.log(`Creating ${plan.length} real Razorpay Test Mode orders for ${strategy}...`)
-  console.log("Orders are created only. Payment success/failure must come from Razorpay Checkout using supported test credentials.")
+  console.log(
+    "Orders are created only. Payment success/failure must come from Razorpay Checkout using supported test credentials."
+  )
+
+  let createdCount = 0
 
   for (const item of plan) {
-    try {
-      const order = await instance.orders.create({
-        amount: item.amount,
-        currency: item.currency,
-        receipt: `${experimentId}_${item.runNumber}`.slice(0, 40),
-        notes: {
-          experimentId: item.experimentId,
-          strategy: item.strategy,
-          scenarioId: item.scenarioId,
-          runNumber: String(item.runNumber),
-        },
-      })
+    const order = await createOrder(item)
+    createdCount += 1
 
-      console.log(JSON.stringify({
+    console.log(
+      JSON.stringify({
         runNumber: item.runNumber,
         strategy: item.strategy,
         scenarioId: item.scenarioId,
         orderId: order.id,
         amount: order.amount,
         currency: order.currency,
-      }))
-
-      await sleep(REQUEST_DELAY_MS)
-    } catch (error) {
-      console.error("ORDER CREATION ERROR:", {
-        runNumber: item.runNumber,
-        strategy: item.strategy,
-        scenarioId: item.scenarioId,
-        statusCode: error.statusCode || error.status,
-        message: error.message,
-        error: error.error,
       })
+    )
 
-      if ((error.statusCode || error.status) === 429) {
-        console.log("Razorpay rate limit reached. Waiting before retrying this order...")
-        await sleep(3000)
-        continue
-      }
+    console.log(`Progress: ${createdCount}/${plan.length}`)
 
-      throw error
+    if (createdCount < plan.length) {
+      await sleep(REQUEST_DELAY_MS)
     }
   }
+
+  console.log(`Completed: ${createdCount}/${plan.length} orders created.`)
 }
 
 const strategy = process.argv[2]
