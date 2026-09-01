@@ -14,115 +14,70 @@ const {
   RESETPASSWORD_API,
 } = endpoints
 
-// ================= SEND OTP =================
-// ================= SEND OTP =================
 export function sendOtp(email, navigate) {
   return async (dispatch) => {
-    const toastId = toast.loading("Sending Email...");
-    dispatch(setLoading(true));
+    const toastId = toast.loading("Sending Email...")
+    dispatch(setLoading(true))
 
     try {
       const response = await apiConnector("POST", SENDOTP_API, {
         email,
         checkUserPresent: true,
-      });
-
-      console.log("SENDOTP API RESPONSE:", response);
+      })
 
       if (!response.data.success) {
-        throw new Error(response.data.message);
+        throw new Error(response.data.message)
       }
 
-      const otp = response.data.otp;
+      const otp = response.data.otp
 
-      // 🔥 PREMIUM TOAST UI
       toast.custom((t) => (
-        <div
-          className={`${
-            t.visible ? "animate-enter" : "animate-leave"
-          } max-w-md w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 shadow-2xl rounded-xl pointer-events-auto flex flex-col p-5 text-white`}
-        >
+        <div className={`${t.visible ? "animate-enter" : "animate-leave"} max-w-md w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 shadow-2xl rounded-xl pointer-events-auto flex flex-col p-5 text-white`}>
           <div className="flex justify-between items-center">
-            <p className="text-sm font-semibold opacity-80">
-              🔐 OTP Verification
-            </p>
+            <p className="text-sm font-semibold opacity-80">🔐 OTP Verification</p>
           </div>
-
           <div className="mt-3 flex items-center justify-between">
-            <span className="text-2xl font-bold tracking-widest">
-              {otp}
-            </span>
-
+            <span className="text-2xl font-bold tracking-widest">{otp}</span>
             <button
               onClick={() => {
-                navigator.clipboard.writeText(otp);
-                toast.success("OTP Copied ✅");
+                navigator.clipboard.writeText(otp)
+                toast.success("OTP Copied ✅")
               }}
               className="bg-white text-purple-600 px-3 py-1 rounded-md text-sm font-semibold hover:bg-gray-200 transition"
             >
               Copy
             </button>
           </div>
-
-          <p className="text-xs mt-2 opacity-80">
-            Valid for a few minutes. Do not share.
-          </p>
+          <p className="text-xs mt-2 opacity-80">Valid for a few minutes. Do not share.</p>
         </div>
-      ), {
-        duration: 15000, // ⏳ longer visibility
-      });
+      ), { duration: 15000 })
 
-      navigate("/verify-email");
-
+      navigate("/verify-email")
     } catch (error) {
-      console.log("SENDOTP ERROR:", error);
-
-      toast.error(
-        error?.response?.data?.message || "Failed to send email"
-      );
+      toast.error(error?.response?.data?.message || "Failed to send email")
     }
 
-    dispatch(setLoading(false));
-    toast.dismiss(toastId);
-  };
+    dispatch(setLoading(false))
+    toast.dismiss(toastId)
+  }
 }
-// ================= SIGNUP =================
-export function signUp(
-  accountType,
-  firstName,
-  lastName,
-  email,
-  password,
-  confirmPassword,
-  otp,
-  navigate
-) {
+
+export function signUp(accountType, firstName, lastName, email, password, confirmPassword, otp, navigate) {
   return async (dispatch) => {
     const toastId = toast.loading("Creating Account...")
     dispatch(setLoading(true))
 
     try {
       const response = await apiConnector("POST", SIGNUP_API, {
-        accountType,
-        firstName,
-        lastName,
-        email,
-        password,
-        confirmPassword,
-        otp,
+        accountType, firstName, lastName, email, password, confirmPassword, otp,
       })
 
-      console.log("SIGNUP API RESPONSE............", response)
-
-      if (!response.data.success) {
-        throw new Error(response.data.message)
-      }
+      if (!response.data.success) throw new Error(response.data.message)
 
       toast.success("Signup Successful 🎉")
       navigate("/login")
     } catch (error) {
-      console.log("SIGNUP API ERROR............", error)
-      toast.error("Signup Failed")
+      toast.error(error?.response?.data?.message || "Signup Failed")
       navigate("/signup")
     }
 
@@ -131,23 +86,15 @@ export function signUp(
   }
 }
 
-// ================= LOGIN =================
 export function login(email, password, navigate) {
   return async (dispatch) => {
     const toastId = toast.loading("Logging in...")
     dispatch(setLoading(true))
 
     try {
-      const response = await apiConnector("POST", LOGIN_API, {
-        email,
-        password,
-      })
+      const response = await apiConnector("POST", LOGIN_API, { email, password })
 
-      console.log("LOGIN API RESPONSE............", response)
-
-      if (!response.data.success) {
-        throw new Error(response.data.message)
-      }
+      if (!response.data.success) throw new Error(response.data.message)
 
       toast.success("Login Successful")
 
@@ -164,8 +111,7 @@ export function login(email, password, navigate) {
 
       navigate("/dashboard/my-profile")
     } catch (error) {
-      console.log("LOGIN API ERROR............", error)
-      toast.error("Login Failed")
+      toast.error(error?.response?.data?.message || "Login Failed")
     }
 
     dispatch(setLoading(false))
@@ -173,7 +119,6 @@ export function login(email, password, navigate) {
   }
 }
 
-// ================= LOGOUT =================
 export function logout(navigate) {
   return (dispatch) => {
     dispatch(setToken(null))
@@ -188,43 +133,22 @@ export function logout(navigate) {
   }
 }
 
-// ================= RESET PASSWORD TOKEN =================
 export function getPasswordResetToken(email, setEmailSent) {
   return async (dispatch) => {
     dispatch(setLoading(true))
-    const toastId = toast.loading("Generating reset link...")
+    const toastId = toast.loading("Sending reset email...")
 
     try {
       const response = await apiConnector("POST", RESETPASSTOKEN_API, { email })
-
-      console.log("RESET PASSWORD TOKEN RESPONSE....", response)
 
       if (!response.data.success) {
         throw new Error(response.data.message)
       }
 
-      const resetLink = response.data.resetLink
-
-      toast.custom(
-        () => (
-          <div className="bg-white shadow-lg rounded-lg p-4 border w-[320px]">
-            <p className="text-sm text-gray-500 mb-2">Reset Password</p>
-
-            <button
-              onClick={() => window.open(resetLink, "_blank")}
-              className="bg-blue-600 text-white px-3 py-1 rounded text-sm"
-            >
-              Open Reset Page
-            </button>
-          </div>
-        ),
-        { duration: 8000 }
-      )
-
       setEmailSent(true)
+      toast.success("Reset link sent to your email")
     } catch (error) {
-      console.log("RESET PASSWORD TOKEN Error", error)
-      toast.error("Failed to generate reset link")
+      toast.error(error?.response?.data?.message || "Failed to send reset email")
     }
 
     dispatch(setLoading(false))
@@ -232,8 +156,7 @@ export function getPasswordResetToken(email, setEmailSent) {
   }
 }
 
-// ================= RESET PASSWORD =================
-export function resetPassword(password, confirmPassword, token) {
+export function resetPassword(password, confirmPassword, token, navigate) {
   return async (dispatch) => {
     dispatch(setLoading(true))
     const toastId = toast.loading("Resetting password...")
@@ -245,16 +168,14 @@ export function resetPassword(password, confirmPassword, token) {
         token,
       })
 
-      console.log("RESET Password RESPONSE ... ", response)
-
       if (!response.data.success) {
         throw new Error(response.data.message)
       }
 
       toast.success("Password reset successful")
+      navigate("/login")
     } catch (error) {
-      console.log("RESET PASSWORD ERROR", error)
-      toast.error("Unable to reset password")
+      toast.error(error?.response?.data?.message || "Unable to reset password")
     }
 
     dispatch(setLoading(false))
