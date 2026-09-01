@@ -29,13 +29,20 @@ export const sidebarLinks = [
   },
   {
     id: 5,
+    name: "Payment Recovery",
+    path: "/dashboard/payment-recovery",
+    type: ACCOUNT_TYPE.INSTRUCTOR,
+    icon: "VscGraph",
+  },
+  {
+    id: 6,
     name: "Enrolled Courses",
     path: "/dashboard/enrolled-courses",
     type: ACCOUNT_TYPE.STUDENT,
     icon: "VscMortarBoard",
   },
   {
-    id: 6,
+    id: 7,
     name: "Purchase History",
     path: "/dashboard/purchase-history",
     type: ACCOUNT_TYPE.STUDENT,
