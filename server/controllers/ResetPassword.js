@@ -101,7 +101,7 @@ exports.resetPassword = async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ token });
+    const user = await User.findOne({ token: token.trim() });
 
     if (!user) {
       return res.status(400).json({
