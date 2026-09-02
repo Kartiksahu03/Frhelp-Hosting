@@ -50,6 +50,7 @@ const getAIAction = async (errorData) => {
 }
 
 const createRecoveryEmail = (customerName, message) => {
+  const appUrl = process.env.FRONTEND_URL || "http://localhost:3000"
   return `
     <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #222;">
       <h2>FrHelp Payment Update</h2>
