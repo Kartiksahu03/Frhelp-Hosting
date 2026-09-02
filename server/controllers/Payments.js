@@ -351,6 +351,19 @@ exports.capturePayment = async (req, res) => {
       })
     }
 
+    const student = await User.findById(userId).select("courses")
+
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Student account not found",
+      })
+    }
+
+    const enrolledCourseIds = new Set(
+      (student.courses || []).map((courseId) => courseId.toString())
+    )
+
     let totalAmount = 0
     const payableCourses = []
 
@@ -364,13 +377,10 @@ exports.capturePayment = async (req, res) => {
         })
       }
 
-      // Ignore courses already purchased by this student instead of blocking
-      // the entire checkout when an old item remains in the cart.
-      const alreadyEnrolled = course.studentsEnrolled.some(
-        (studentId) => studentId.toString() === userId.toString()
-      )
-
-      if (alreadyEnrolled) {
+      // The student's own course list is the authoritative enrollment check.
+      // This avoids a stale studentsEnrolled array on a course incorrectly
+      // blocking checkout for a newly selected course.
+      if (enrolledCourseIds.has(course._id.toString())) {
         continue
       }
 
