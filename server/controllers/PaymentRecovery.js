@@ -51,13 +51,19 @@ const getAIAction = async (errorData) => {
 
 const createRecoveryEmail = (customerName, message) => {
   const appUrl = process.env.FRONTEND_URL || "http://localhost:3000"
+
   return `
-    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #222;">
-      <h2>FrHelp Payment Update</h2>
+    <div style="max-width:600px;margin:24px auto;padding:28px;font-family:Arial,sans-serif;line-height:1.6;color:#1f2937;border:1px solid #e5e7eb;border-radius:12px;">
+      <h2 style="margin-top:0;">FrHelp Payment Update</h2>
       <p>Hi ${customerName || "Learner"},</p>
       <p>${message}</p>
       <p>Your course access will only be provided after a successful verified payment.</p>
-      <p>Thank you,<br/>FrHelp Team</p>
+      <p style="margin:24px 0;">
+        <a href="${appUrl}" style="display:inline-block;padding:12px 18px;background:#111827;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:700;">
+          Return to FrHelp
+        </a>
+      </p>
+      <p style="color:#64748b;">Thank you,<br/>FrHelp Team</p>
     </div>
   `
 }
