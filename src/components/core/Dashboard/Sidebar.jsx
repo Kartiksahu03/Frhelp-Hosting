@@ -15,6 +15,7 @@ export default function Sidebar() {
     (state) => state.profile
   )
   const { loading: authLoading } = useSelector((state) => state.auth)
+  const enrolledCourseCount = Array.isArray(user?.courses) ? user.courses.length : 0
 
   const dispatch = useDispatch()
   const navigate = useNavigate()
@@ -131,6 +132,7 @@ export default function Sidebar() {
                     link={link}
                     iconName={link.icon}
                     collapsed={collapsed}
+                    badgeCount={link.name === "Enrolled Courses" ? enrolledCourseCount : undefined}
                   />
                 )
               })}
