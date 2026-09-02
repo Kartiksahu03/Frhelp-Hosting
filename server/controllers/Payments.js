@@ -419,6 +419,10 @@ exports.capturePayment = async (req, res) => {
       success: true,
       data: {
         ...paymentResponse,
+        // The Razorpay Checkout key is public and required by the browser SDK.
+        // Return the same test/live key used to create this order so local
+        // checkout does not depend on a separately configured frontend .env.
+        key: process.env.RAZORPAY_KEY,
         courses: payableCourses,
       },
     })
