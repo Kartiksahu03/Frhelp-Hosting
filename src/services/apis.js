@@ -1,4 +1,15 @@
-const BASE_URL = process.env.REACT_APP_BASE_URL
+// Keep the frontend and backend on the same environment.
+// Local development must always use the local API, even if an old production
+// value was compiled into a previous React build.
+const isLocalDevelopment =
+  typeof window !== "undefined" &&
+  (window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1");
+
+const BASE_URL = isLocalDevelopment
+  ? "http://localhost:4000/api/v1"
+  : process.env.REACT_APP_BASE_URL ||
+    "https://frhelp-backend-3t3l.onrender.com/api/v1";
 
 // AUTH ENDPOINTS
 export const endpoints = {
@@ -52,8 +63,6 @@ export const courseEndpoints = {
   CREATE_RATING_API: BASE_URL + "/course/createRating",
 }
 
-
-
 // RATINGS AND REVIEWS
 export const ratingsEndpoints = {
   REVIEWS_DETAILS_API: BASE_URL + "/course/getReviews",
@@ -68,18 +77,16 @@ export const categories = {
 export const catalogData = {
   CATALOGPAGEDATA_API: BASE_URL + "/course/getCategoryPageDetails",
 }
+
 // CONTACT-US API
 export const contactusEndpoint = {
   CONTACT_US_API: BASE_URL + "/reach/contact",
 }
 
-// aiRoutes API
-
+// AI API
 export const aiEndpoints = {
   AI_CHAT_API: BASE_URL + "/ai/chat",
 }
-
-
 
 // SETTINGS PAGE API
 export const settingsEndpoints = {
