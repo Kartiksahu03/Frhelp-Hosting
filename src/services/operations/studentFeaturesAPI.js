@@ -218,7 +218,7 @@ export async function buyCourse(token, courses, userDetails, navigate, dispatch)
         }
 
         verifyPayment(
-          { ...response, courses },
+          { ...response, courses: orderData.courses || courses },
           navigate,
           dispatch
         );
@@ -252,7 +252,8 @@ export async function buyCourse(token, courses, userDetails, navigate, dispatch)
 
   } catch (error) {
     console.log("PAYMENT API ERROR:", error);
-    toast.error("Could not make payment");
+    const backendMessage = error?.response?.data?.message;
+    toast.error(backendMessage || "Could not make payment");
   }
   toast.dismiss(toastId);
 }
