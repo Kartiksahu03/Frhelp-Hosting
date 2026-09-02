@@ -11,7 +11,13 @@ const {
   SEND_PAYMENT_SUCCESS_EMAIL_API,
 } = studentEndpoints;
 
-const { RECORD_FAILED_PAYMENT_API } = paymentRecoveryEndpoints;
+const {
+  RECORD_FAILED_PAYMENT_API,
+  RECORD_RECOVERY_RESULT_API,
+} = paymentRecoveryEndpoints;
+
+const PAYMENT_EXPERIMENT_CONFIG_KEY = "paymentExperimentConfig";
+const PENDING_RECOVERY_KEY = "pendingPaymentRecovery";
 
 function loadScript(src) {
   return new Promise((resolve) => {
@@ -25,7 +31,7 @@ function loadScript(src) {
 
 function getPaymentExperimentConfig() {
   try {
-    const config = localStorage.getItem("paymentExperimentConfig");
+    const config = localStorage.getItem(PAYMENT_EXPERIMENT_CONFIG_KEY);
 
     if (!config) {
       return null;
@@ -36,6 +42,46 @@ function getPaymentExperimentConfig() {
     console.log("PAYMENT EXPERIMENT CONFIG ERROR:", error);
     return null;
   }
+}
+
+function getPendingRecovery() {
+  try {
+    const pendingRecovery = localStorage.getItem(PENDING_RECOVERY_KEY);
+
+    if (!pendingRecovery) {
+      return null;
+    }
+
+    return JSON.parse(pendingRecovery);
+  } catch (error) {
+    console.log("PENDING PAYMENT RECOVERY ERROR:", error);
+    localStorage.removeItem(PENDING_RECOVERY_KEY);
+    return null;
+  }
+}
+
+function savePendingRecovery(recoveryRecord) {
+  if (!recoveryRecord?.experimentId || !recoveryRecord?.paymentId) {
+    return;
+  }
+
+  localStorage.setItem(
+    PENDING_RECOVERY_KEY,
+    JSON.stringify({
+      experimentId: recoveryRecord.experimentId,
+      paymentId: recoveryRecord.paymentId,
+      amount: recoveryRecord.amount || 0,
+      createdAt: Date.now(),
+    })
+  );
+}
+
+function clearPendingRecovery() {
+  localStorage.removeItem(PENDING_RECOVERY_KEY);
+}
+
+function getAmountInRupees(amountInPaise) {
+  return Number((Number(amountInPaise || 0) / 100).toFixed(2));
 }
 
 async function recordFailedPayment(response, orderData, userDetails) {
@@ -61,7 +107,7 @@ async function recordFailedPayment(response, orderData, userDetails) {
         experimentId: experimentConfig.experimentId,
         strategy: experimentConfig.strategy,
         scenarioId: experimentConfig.scenarioId,
-        amount: orderData.amount,
+        amount: getAmountInRupees(orderData.amount),
         currency: orderData.currency,
         customerName: `${userDetails?.firstName || ""} ${userDetails?.lastName || ""}`.trim(),
         customerEmail: userDetails?.email || "",
@@ -84,6 +130,43 @@ async function recordFailedPayment(response, orderData, userDetails) {
   }
 }
 
+async function recordSuccessfulRecovery(response, orderData) {
+  try {
+    const experimentConfig = getPaymentExperimentConfig();
+    const pendingRecovery = getPendingRecovery();
+
+    if (!experimentConfig || !pendingRecovery) {
+      return null;
+    }
+
+    // Prevent a later normal payment from being attached to an old experiment.
+    if (pendingRecovery.experimentId !== experimentConfig.experimentId) {
+      return null;
+    }
+
+    const recoveryResponse = await apiConnector(
+      "POST",
+      RECORD_RECOVERY_RESULT_API,
+      {
+        experimentId: pendingRecovery.experimentId,
+        paymentId: pendingRecovery.paymentId,
+        recoveryPaymentId: response.razorpay_payment_id,
+        recoveryStatus: "recovered",
+        recoveredAmount: getAmountInRupees(orderData.amount),
+      }
+    );
+
+    if (recoveryResponse.data?.success) {
+      clearPendingRecovery();
+    }
+
+    return recoveryResponse.data?.data || null;
+  } catch (error) {
+    console.log("SUCCESSFUL RECOVERY TRACKING ERROR:", error);
+    return null;
+  }
+}
+
 export async function buyCourse(token, courses, userDetails, navigate, dispatch) {
   const toastId = toast.loading("Loading...");
   try {
@@ -93,7 +176,6 @@ export async function buyCourse(token, courses, userDetails, navigate, dispatch)
       return;
     }
 
-    // 🔥 NO AUTH HEADER HERE (interceptor handles it)
     const orderResponse = await apiConnector(
       "POST",
       COURSE_PAYMENT_API,
@@ -104,11 +186,13 @@ export async function buyCourse(token, courses, userDetails, navigate, dispatch)
       throw new Error(orderResponse.data.message);
     }
 
+    const orderData = orderResponse.data.data;
+
     const options = {
       key: process.env.REACT_APP_RAZORPAY_KEY,
-      currency: orderResponse.data.data.currency,
-      amount: `${orderResponse.data.data.amount}`,
-      order_id: orderResponse.data.data.id,
+      currency: orderData.currency,
+      amount: `${orderData.amount}`,
+      order_id: orderData.id,
       name: "FrHelp",
       description: "Thank you for purchasing the course",
       image: rzpLogo,
@@ -116,8 +200,23 @@ export async function buyCourse(token, courses, userDetails, navigate, dispatch)
         name: userDetails.firstName,
         email: userDetails.email,
       },
-      handler: function (response) {
-        sendPaymentSuccessEmail(response, orderResponse.data.data.amount);
+      handler: async function (response) {
+        await sendPaymentSuccessEmail(response, orderData.amount);
+
+        const recoveredRecord = await recordSuccessfulRecovery(
+          response,
+          orderData
+        );
+
+        if (recoveredRecord) {
+          console.log("PAYMENT RECOVERY COMPLETED:", {
+            experimentId: recoveredRecord.experimentId,
+            originalPaymentId: recoveredRecord.paymentId,
+            recoveryPaymentId: recoveredRecord.recoveryPaymentId,
+            recoveredAmount: recoveredRecord.recoveredAmount,
+          });
+        }
+
         verifyPayment(
           { ...response, courses },
           navigate,
@@ -134,11 +233,13 @@ export async function buyCourse(token, courses, userDetails, navigate, dispatch)
 
       const recoveryDecision = await recordFailedPayment(
         response,
-        orderResponse.data.data,
+        orderData,
         userDetails
       );
 
       if (recoveryDecision) {
+        savePendingRecovery(recoveryDecision);
+
         console.log("PAYMENT RECOVERY DECISION:", {
           action: recoveryDecision.chosenAction,
           executionStatus: recoveryDecision.executionStatus,
