@@ -30,7 +30,11 @@ exports.resetPasswordToken = async (req, res) => {
     user.resetPasswordExpires = Date.now() + 15 * 60 * 1000;
     await user.save();
 
-    const frontendUrl = process.env.FRONTEND_URL;
+    // Use the actual frontend origin that requested the reset.
+    // This prevents a localhost reset token from being opened in the
+    // production frontend, where it would otherwise call a different database.
+    const requestOrigin = req.get("origin");
+    const frontendUrl = requestOrigin || process.env.FRONTEND_URL;
 
     if (!frontendUrl) {
       user.token = undefined;
@@ -39,11 +43,13 @@ exports.resetPasswordToken = async (req, res) => {
 
       return res.status(500).json({
         success: false,
-        message: "FRONTEND_URL is missing from server environment",
+        message: "Unable to determine frontend URL for reset link",
       });
     }
 
     const resetLink = `${frontendUrl.replace(/\/$/, "")}/update-password/${token}`;
+
+    console.log("🔗 Password reset link:", resetLink);
 
     const mailResponse = await mailSender(
       email,
