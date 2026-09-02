@@ -344,55 +344,79 @@ exports.capturePayment = async (req, res) => {
     const { courses } = req.body
     const userId = req.user.id
 
-    if (!courses || courses.length === 0) {
+    if (!Array.isArray(courses) || courses.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "Please provide Course IDs",
+        message: "Please add at least one course to the cart",
       })
     }
 
     let totalAmount = 0
+    const payableCourses = []
 
-    for (const course_id of courses) {
-      const course = await Course.findById(course_id)
+    for (const courseId of courses) {
+      const course = await Course.findById(courseId)
 
       if (!course) {
         return res.status(404).json({
           success: false,
-          message: "Course not found",
+          message: "One of the selected courses was not found",
         })
       }
 
-      const uid = new mongoose.Types.ObjectId(userId)
+      // Ignore courses already purchased by this student instead of blocking
+      // the entire checkout when an old item remains in the cart.
+      const alreadyEnrolled = course.studentsEnrolled.some(
+        (studentId) => studentId.toString() === userId.toString()
+      )
 
-      if (course.studentsEnrolled.includes(uid)) {
+      if (alreadyEnrolled) {
+        continue
+      }
+
+      const price = Number(course.price)
+      if (!Number.isFinite(price) || price <= 0) {
         return res.status(400).json({
           success: false,
-          message: "Already enrolled",
+          message: `Invalid price for course: ${course.courseName}`,
         })
       }
 
-      totalAmount += course.price
+      totalAmount += price
+      payableCourses.push(courseId)
+    }
+
+    if (payableCourses.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "All courses in your cart are already enrolled",
+      })
     }
 
     const options = {
-      amount: totalAmount * 100,
+      amount: Math.round(totalAmount * 100),
       currency: "INR",
-      receipt: `receipt_${Date.now()}`,
+      receipt: `receipt_${Date.now()}`.slice(0, 40),
+      notes: {
+        userId: userId.toString(),
+        courses: payableCourses.join(","),
+      },
     }
 
     const paymentResponse = await instance.orders.create(options)
 
     return res.status(200).json({
       success: true,
-      data: paymentResponse,
+      data: {
+        ...paymentResponse,
+        courses: payableCourses,
+      },
     })
-
   } catch (error) {
-    console.error(error)
+    console.error("CAPTURE PAYMENT ERROR:", error)
     return res.status(500).json({
       success: false,
-      message: "Could not initiate order",
+      message: error?.error?.description || error.message || "Could not initiate order",
     })
   }
 }
