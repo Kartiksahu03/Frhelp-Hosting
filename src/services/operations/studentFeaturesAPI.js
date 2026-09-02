@@ -189,7 +189,10 @@ export async function buyCourse(token, courses, userDetails, navigate, dispatch)
     const orderData = orderResponse.data.data;
 
     const options = {
-      key: process.env.REACT_APP_RAZORPAY_KEY,
+      // Prefer the public key returned with the server-created order.
+      // This prevents Razorpay Checkout initialization from failing when the
+      // frontend development server was started without REACT_APP_RAZORPAY_KEY.
+      key: orderData.key || process.env.REACT_APP_RAZORPAY_KEY,
       currency: orderData.currency,
       amount: `${orderData.amount}`,
       order_id: orderData.id,
