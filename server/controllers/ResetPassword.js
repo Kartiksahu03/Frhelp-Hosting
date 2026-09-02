@@ -86,8 +86,9 @@ exports.resetPasswordToken = async (req, res) => {
 exports.resetPassword = async (req, res) => {
   try {
     const { password, confirmPassword, token } = req.body;
+    const normalizedToken = typeof token === "string" ? token.trim() : "";
 
-    if (!password || !confirmPassword || !token) {
+    if (!password || !confirmPassword || !normalizedToken) {
       return res.status(400).json({
         success: false,
         message: "Password, confirm password and token are required",
@@ -101,7 +102,8 @@ exports.resetPassword = async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ token: token.trim() });
+    console.log("🔐 RESET TOKEN RECEIVED:", normalizedToken);
+    const user = await User.findOne({ token: normalizedToken });
 
     if (!user) {
       return res.status(400).json({
