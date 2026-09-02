@@ -117,37 +117,55 @@ function RecoveryDashboard() {
         </p>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-richblack-700 bg-richblack-800">
+      <div className="overflow-hidden rounded-xl border border-richblack-700 bg-richblack-800">
         <div className="p-5">
           <h2 className="text-xl font-semibold">Decision Log</h2>
           <p className="mt-1 text-sm text-richblack-300">
             Every row comes from the payment experiment records.
           </p>
         </div>
-        <table className="w-full text-left text-sm">
-          <thead className="border-t border-richblack-700 text-richblack-300">
-            <tr>
-              <th className="px-5 py-3">Strategy</th>
-              <th className="px-5 py-3">Scenario</th>
-              <th className="px-5 py-3">Error Code</th>
-              <th className="px-5 py-3">Error Reason</th>
-              <th className="px-5 py-3">Action</th>
-              <th className="px-5 py-3">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(analytics?.records || []).map((record) => (
-              <tr key={`${record.experimentId}-${record.paymentId}`} className="border-t border-richblack-700">
-                <td className="px-5 py-3">{record.strategy}</td>
-                <td className="px-5 py-3">{record.scenarioId}</td>
-                <td className="px-5 py-3">{record.error_code}</td>
-                <td className="px-5 py-3">{record.error_reason}</td>
-                <td className="px-5 py-3">{record.chosenAction}</td>
-                <td className="px-5 py-3">{record.recoveryStatus}</td>
+
+        <div className="w-full">
+          <table className="w-full table-fixed text-left text-sm">
+            <colgroup>
+              <col className="w-[10%]" />
+              <col className="w-[14%]" />
+              <col className="w-[21%]" />
+              <col className="w-[26%]" />
+              <col className="w-[16%]" />
+              <col className="w-[13%]" />
+            </colgroup>
+
+            <thead className="border-t border-richblack-700 text-richblack-300">
+              <tr>
+                <th className="px-3 py-3 font-semibold sm:px-4">Strategy</th>
+                <th className="px-3 py-3 font-semibold sm:px-4">Scenario</th>
+                <th className="px-3 py-3 font-semibold sm:px-4">Error Code</th>
+                <th className="px-3 py-3 font-semibold sm:px-4">Error Reason</th>
+                <th className="px-3 py-3 font-semibold sm:px-4">Action</th>
+                <th className="px-3 py-3 font-semibold sm:px-4">Status</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+
+            <tbody>
+              {(analytics?.records || []).map((record) => (
+                <tr
+                  key={`${record.experimentId}-${record.paymentId}`}
+                  className="border-t border-richblack-700 align-top"
+                >
+                  <td className="break-all px-3 py-4 sm:px-4">{record.strategy}</td>
+                  <td className="break-all px-3 py-4 sm:px-4">{record.scenarioId}</td>
+                  <td className="break-all px-3 py-4 sm:px-4">{record.error_code}</td>
+                  <td className="break-all px-3 py-4 sm:px-4">{record.error_reason}</td>
+                  <td className="break-all px-3 py-4 font-medium text-yellow-50 sm:px-4">
+                    {record.chosenAction}
+                  </td>
+                  <td className="break-all px-3 py-4 sm:px-4">{record.recoveryStatus}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   )
