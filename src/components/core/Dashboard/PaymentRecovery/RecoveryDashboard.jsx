@@ -125,8 +125,8 @@ function RecoveryDashboard() {
           </p>
         </div>
 
-        <div className="w-full">
-          <table className="w-full table-fixed text-left text-sm">
+        <div className="w-full overflow-x-auto">
+          <table className="min-w-[980px] w-full text-left text-sm">
             <colgroup>
               <col className="w-[10%]" />
               <col className="w-[14%]" />
@@ -153,11 +153,11 @@ function RecoveryDashboard() {
                   key={`${record.experimentId}-${record.paymentId}`}
                   className="border-t border-richblack-700 align-top"
                 >
-                  <td className="break-all px-3 py-4 sm:px-4">{record.strategy}</td>
+                  <td className="break-words px-3 py-4 sm:px-4">{record.strategy}</td>
                   <td className="break-all px-3 py-4 sm:px-4">{record.scenarioId}</td>
                   <td className="break-all px-3 py-4 sm:px-4">{record.error_code}</td>
                   <td className="break-all px-3 py-4 sm:px-4">{record.error_reason}</td>
-                  <td className="break-all px-3 py-4 font-medium text-yellow-50 sm:px-4">
+                  <td className="break-words px-3 py-4 font-medium text-yellow-50 sm:px-4">
                     {record.chosenAction}
                   </td>
                   <td className="break-all px-3 py-4 sm:px-4">{record.recoveryStatus}</td>
