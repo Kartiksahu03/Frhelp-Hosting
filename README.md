@@ -38,7 +38,7 @@
 
 ## 🎯 What is FrHelp?
 
-**FrHelp** is a production-grade EdTech platform where students enroll in courses, instructors publish them, and admins run the show — with a **Groq-powered AI assistant** that actually understands what users are asking for. Not a tutorial project: JWT-secured, payment-integrated, and deployed across three services.
+**FrHelp** is a production-grade EdTech platform where students enroll in courses, instructors publish them, and admins run the show — with a **Groq-powered AI assistant** and an **AI-driven payment recovery experiment system**. The platform is JWT-secured, payment-integrated, email-enabled, and records real payment failure and recovery outcomes for analysis.
 
 <br/>
 
@@ -74,19 +74,28 @@
 ### 📚 Courses & Payments
 - **100+ courses** with enrollment & progress tracking
 - **Razorpay** — order creation → verification → auto-enrollment
+- Payment failures and successful retries recorded as recovery outcomes
 - Instructor-side course creation flow
 
 </td>
 <td width="50%" valign="top">
 
 ### 🤖 AI Assistant
-- Built on **Groq LLM (LLaMA 3.3)**
-- Classifies **10+ user intent categories**
+- Built on **Groq GPT-OSS-20B**
+- Classifies user intent and supports course-related queries
 - Cuts down manual support load
 
 </td>
 </tr>
 </table>
+
+### 💳 AI Payment Recovery
+- Records real payment failures from the integrated payment flow
+- Compares **Baseline** and **AI Strategy** recovery decisions
+- Tracks failed payments, recovery attempts, successful recoveries, recovery rate, and recovered revenue
+- Sends branded **FrHelp payment recovery emails** with a direct return link
+- Shows a decision log containing scenario, error code, reason, strategy, and action
+- Updates enrollment only after verified successful payment
 
 <!-- ══════════════════════ DIVIDER ══════════════════════ -->
 <img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png" width="100%"/>
@@ -104,8 +113,9 @@
 |:---:|:---|
 | **Frontend** | React.js · Redux Toolkit · Tailwind CSS · Axios |
 | **Backend** | Node.js · Express.js · MongoDB (Mongoose) · JWT |
-| **Payments** | Razorpay |
-| **AI** | Groq API (LLaMA 3.3) — intent classification |
+| **Payments** | Razorpay · payment verification · recovery analytics |
+| **Email** | Resend API · payment recovery and transaction emails |
+| **AI** | Groq API (GPT-OSS-20B) — intent classification |
 | **Storage** | Cloudinary |
 | **Deploy** | Vercel · Render · MongoDB Atlas |
 
@@ -121,17 +131,17 @@ frhelp/
 ├── 🎨 client/                 # React frontend
 │   └── src/
 │       ├── app/              # Redux store
-│       ├── features/         # auth · courses · enrollment · ai
+│       ├── features/         # auth · courses · enrollment · payment recovery · ai
 │       ├── components/       # layout · course-cards · dashboard · ai-chat
-│       ├── pages/            # Student · Instructor · Admin dashboards
-│       └── services/         # axios instance + JWT interceptors
+│       ├── pages/            # Student · Instructor · Admin dashboards · Recovery Analytics
+│       └── services/         # axios instance + API integrations
 │
 └── ⚙️ server/                 # Express + MongoDB API
-    ├── models/              # User · Course · Enrollment · Payment
-    ├── controllers/         # auth · course · enrollment · payment · ai
+    ├── models/              # User · Course · Enrollment · Payment · Recovery records
+    ├── controllers/         # auth · course · enrollment · payment · recovery · ai
     ├── routes/              # one router per domain, role-gated
     ├── middlewares/         # JWT protect · role-check · error handler
-    └── services/            # razorpayService · aiService
+    └── services/            # Razorpay · Groq · Resend · recovery logic
 ```
 
 > Role checks live in a dedicated middleware layer *after* JWT verification — each route declares which roles may access it, instead of scattering permission logic through controllers.
@@ -151,6 +161,41 @@ flowchart LR
     style B fill:#FF6F00,color:#fff
     style G fill:#00C853,color:#fff
 ```
+
+<!-- ══════════════════════ PAYMENT RECOVERY FLOW ══════════════════════ -->
+## 💳 AI Payment Recovery Flow
+
+```mermaid
+flowchart TD
+    A[Student starts payment] --> B{Payment verified?}
+    B -->|Yes| C[Enroll in course]
+    B -->|No| D[Record payment failure]
+    D --> E[Create baseline / AI strategy decision]
+    E --> F[Select recovery action]
+    F --> G[Send FrHelp recovery email]
+    G --> H[Student returns and retries]
+    H --> B
+    C --> I[Update recovery analytics]
+    D --> I
+    style A fill:#6366F1,color:#fff
+    style C fill:#00C853,color:#fff
+    style D fill:#EF4444,color:#fff
+    style E fill:#8B5CF6,color:#fff
+```
+
+### Recovery Analytics
+
+The student-facing recovery dashboard reports:
+
+- Failed Payments
+- Recovery Attempts
+- Successful Recoveries
+- Recovery Rate
+- Recovered Amount
+- Incremental Recovered Revenue
+- Decision Log for each recorded experiment
+
+The metrics are calculated from recorded payment and recovery outcomes rather than static dashboard values.
 
 <!-- ══════════════════════ QUICKSTART ══════════════════════ -->
 <img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png" width="100%"/>
@@ -178,25 +223,27 @@ npm run dev
 
 `server/.env`:
 ```env
-PORT=5000
+PORT=4000
 MONGO_URI=your_mongodb_atlas_uri
 JWT_SECRET=any_long_random_string
 JWT_EXPIRES_IN=7d
 RAZORPAY_KEY_ID=your_razorpay_key_id
 RAZORPAY_KEY_SECRET=your_razorpay_key_secret
 GROQ_API_KEY=your_groq_key
-CLIENT_URL=http://localhost:5173
+FRONTEND_URL=http://localhost:3000
+RESEND_API_KEY=your_resend_api_key
+MAIL_FROM=FrHelp <onboarding@resend.dev>
 ```
 
 ```bash
 # 3. Frontend (new terminal)
 cd client
 npm install
-cp .env.example .env      # VITE_API_URL=http://localhost:5000/api
+cp .env.example .env      # REACT_APP_BASE_URL=http://localhost:4000/api/v1
 npm run dev
 ```
 
-Open `http://localhost:5173` and sign up. 🎉
+Open `http://localhost:3000` and sign up. 🎉
 
 </details>
 
