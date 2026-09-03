@@ -232,11 +232,19 @@ const runExperiment = async (experimentId) => {
     throw new Error("Database connection failed")
   }
 
+  const existingRecordCount = await PaymentExperiment.countDocuments({
+    experimentId,
+  })
+
+  if (existingRecordCount > 0) {
+    throw new Error(
+      `Experiment "${experimentId}" already has ${existingRecordCount} records. Refusing to create another 120 Razorpay orders. Use a new experiment ID for a new run, or run "node scripts/repriceExperimentFromCourses.js ${experimentId}" to repair existing experiment revenue without creating orders.`
+    )
+  }
+
   const courses = await getExperimentCourses()
   const scenarioPlan = buildScenarioPlan(courses)
   const totalOrders = ATTEMPTS_PER_STRATEGY * 2
-
-  await PaymentExperiment.deleteMany({ experimentId })
 
   console.log("")
   console.log("=== PAYMENT RECOVERY PAIRED EXPERIMENT ===")
