@@ -1,1 +1,0 @@
-"use strict"\n\nmodule.exports = { test: true }\n
