@@ -2,6 +2,8 @@ import { useEffect, useState } from "react"
 import { paymentRecoveryEndpoints } from "../../../../services/apis"
 import { apiConnector } from "../../../../services/apiconnector"
 
+const DEFAULT_EXPERIMENT_ID = "comparison-demo-001"
+
 function MetricCard({ title, baseline, ai, difference }) {
   return (
     <div className="rounded-xl border border-richblack-700 bg-richblack-800 p-5">
@@ -35,7 +37,7 @@ function RecoveryDashboard() {
       try {
         const response = await apiConnector(
           "GET",
-          paymentRecoveryEndpoints.GET_RECOVERY_ANALYTICS_API
+          `${paymentRecoveryEndpoints.GET_RECOVERY_ANALYTICS_API}?experimentId=${encodeURIComponent(DEFAULT_EXPERIMENT_ID)}`
         )
 
         if (!response.data.success) {
@@ -73,7 +75,7 @@ function RecoveryDashboard() {
       <div>
         <h1 className="text-3xl font-semibold">Payment Recovery Analytics</h1>
         <p className="mt-2 text-richblack-300">
-          Real experiment results calculated from recorded payment failures and recovery outcomes.
+          Experiment: <span className="font-medium text-white">{DEFAULT_EXPERIMENT_ID}</span>. Results are calculated only from records belonging to this experiment.
         </p>
       </div>
 
