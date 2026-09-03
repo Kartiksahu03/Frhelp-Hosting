@@ -25,6 +25,10 @@ const paymentExperimentSchema = new mongoose.Schema(
     },
     customerName: String,
     customerEmail: String,
+    courseId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Course",
+    },
     orderId: String,
     paymentId: String,
     error_code: String,
