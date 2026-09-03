@@ -4,6 +4,7 @@ const Razorpay = require("razorpay")
 const mongoose = require("mongoose")
 const { connect } = require("../config/database")
 const PaymentExperiment = require("../models/PaymentExperiment")
+const Course = require("../models/Course")
 
 const instance = new Razorpay({
   key_id: process.env.RAZORPAY_KEY,
@@ -13,7 +14,6 @@ const instance = new Razorpay({
 // Single experiment-size configuration.
 const ATTEMPTS_PER_STRATEGY = 60
 
-const DEFAULT_AMOUNT = 10000
 const REQUEST_DELAY_MS = 2000
 const MAX_RATE_LIMIT_RETRIES = 8
 
@@ -71,14 +71,41 @@ const scenarios = [
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
-const buildScenarioPlan = () => {
+const getExperimentCourses = async () => {
+  const courses = await Course.find({
+    price: { $gt: 0 },
+  })
+    .select("_id courseName price status")
+    .sort({ createdAt: 1 })
+
+  const validCourses = courses.filter(
+    (course) =>
+      typeof course.price === "number" &&
+      Number.isFinite(course.price) &&
+      course.price > 0
+  )
+
+  if (validCourses.length === 0) {
+    throw new Error(
+      "No courses with a valid numeric price were found. Create a priced course before running the experiment."
+    )
+  }
+
+  return validCourses
+}
+
+const buildScenarioPlan = (courses) => {
   const plan = []
 
   for (let index = 0; index < ATTEMPTS_PER_STRATEGY; index++) {
+    const course = courses[index % courses.length]
+
     plan.push({
       ...scenarios[index % scenarios.length],
       pairNumber: index + 1,
-      amount: DEFAULT_AMOUNT,
+      courseId: course._id.toString(),
+      courseName: course.courseName,
+      amount: Number(course.price),
       currency: "INR",
     })
   }
@@ -92,7 +119,7 @@ const createOrder = async (item) => {
   while (true) {
     try {
       return await instance.orders.create({
-        amount: item.amount,
+        amount: Math.round(item.amount * 100),
         currency: item.currency,
         receipt: `${item.experimentId}_${item.strategy}_${item.pairNumber}`.slice(0, 40),
         notes: {
@@ -100,6 +127,9 @@ const createOrder = async (item) => {
           strategy: item.strategy,
           scenarioId: item.scenarioId,
           pairNumber: String(item.pairNumber),
+          courseId: item.courseId,
+          courseName: item.courseName,
+          coursePriceRupees: String(item.amount),
         },
       })
     } catch (error) {
@@ -202,7 +232,8 @@ const runExperiment = async (experimentId) => {
     throw new Error("Database connection failed")
   }
 
-  const scenarioPlan = buildScenarioPlan()
+  const courses = await getExperimentCourses()
+  const scenarioPlan = buildScenarioPlan(courses)
   const totalOrders = ATTEMPTS_PER_STRATEGY * 2
 
   await PaymentExperiment.deleteMany({ experimentId })
@@ -214,8 +245,13 @@ const runExperiment = async (experimentId) => {
   console.log(`Baseline records: ${ATTEMPTS_PER_STRATEGY}`)
   console.log(`AI records: ${ATTEMPTS_PER_STRATEGY}`)
   console.log(`Total paired records: ${totalOrders}`)
-  console.log("Each baseline/AI pair receives the same scenario. Only the strategy differs.")
+  console.log("Each baseline/AI pair receives the same scenario and the same actual course price.")
   console.log("Every experiment record is resolved as recovered or unrecovered before completion.")
+  console.log("")
+  console.log("Courses used for experiment:")
+  courses.forEach((course) => {
+    console.log({ courseName: course.courseName, priceRupees: course.price })
+  })
   console.log("")
 
   let createdCount = 0
@@ -238,6 +274,9 @@ const runExperiment = async (experimentId) => {
           pairNumber: item.pairNumber,
           strategy: item.strategy,
           scenarioId: item.scenarioId,
+          courseName: item.courseName,
+          coursePriceRupees: item.amount,
+          razorpayOrderAmountPaise: order.amount,
           orderId: order.id,
           recordId: record._id.toString(),
           recoveryStatus: record.recoveryStatus,
@@ -273,6 +312,11 @@ const runExperiment = async (experimentId) => {
             $cond: [{ $eq: ["$recoveryStatus", "pending"] }, 1, 0],
           },
         },
+        recoveredRevenue: {
+          $sum: {
+            $cond: [{ $eq: ["$recoveryStatus", "recovered"] }, "$recoveredAmount", 0],
+          },
+        },
       },
     },
   ])
@@ -280,6 +324,7 @@ const runExperiment = async (experimentId) => {
   console.log("")
   console.log("=== EXPERIMENT COMPLETE ===")
   console.table(summary)
+  console.log("Revenue is calculated from actual Course.price values stored in MongoDB.")
   console.log("All records are stored in MongoDB and ready for the analytics dashboard.")
 
   await mongoose.connection.close()
