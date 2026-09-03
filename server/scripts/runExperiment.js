@@ -7,7 +7,10 @@ const instance = new Razorpay({
   key_secret: process.env.RAZORPAY_SECRET,
 })
 
-const TOTAL_ATTEMPTS = 200
+// Single experiment-size configuration.
+// Change only this value when you need a larger or smaller paired experiment.
+const ATTEMPTS_PER_STRATEGY = 60
+
 const DEFAULT_AMOUNT = 10000
 const REQUEST_DELAY_MS = 2000
 const MAX_RATE_LIMIT_RETRIES = 8
@@ -22,15 +25,13 @@ const scenarioIds = [
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
-const buildPlan = (strategy, experimentId) => {
+const buildScenarioPlan = () => {
   const plan = []
 
-  for (let index = 0; index < TOTAL_ATTEMPTS; index++) {
+  for (let index = 0; index < ATTEMPTS_PER_STRATEGY; index++) {
     plan.push({
-      experimentId,
-      strategy,
       scenarioId: scenarioIds[index % scenarioIds.length],
-      runNumber: index + 1,
+      pairNumber: index + 1,
       amount: DEFAULT_AMOUNT,
       currency: "INR",
     })
@@ -47,19 +48,19 @@ const createOrder = async (item) => {
       return await instance.orders.create({
         amount: item.amount,
         currency: item.currency,
-        receipt: `${item.experimentId}_${item.runNumber}`.slice(0, 40),
+        receipt: `${item.experimentId}_${item.strategy}_${item.pairNumber}`.slice(0, 40),
         notes: {
           experimentId: item.experimentId,
           strategy: item.strategy,
           scenarioId: item.scenarioId,
-          runNumber: String(item.runNumber),
+          pairNumber: String(item.pairNumber),
         },
       })
     } catch (error) {
       const statusCode = error.statusCode || error.status
 
       console.error("ORDER CREATION ERROR:", {
-        runNumber: item.runNumber,
+        pairNumber: item.pairNumber,
         strategy: item.strategy,
         scenarioId: item.scenarioId,
         statusCode,
@@ -72,6 +73,7 @@ const createOrder = async (item) => {
       }
 
       rateLimitRetryCount += 1
+
       const retryDelay = Math.min(
         REQUEST_DELAY_MS * Math.pow(2, rateLimitRetryCount),
         30000
@@ -86,54 +88,75 @@ const createOrder = async (item) => {
   }
 }
 
-const createOrders = async (strategy, experimentId) => {
+const createPairedExperimentOrders = async (experimentId) => {
   if (!process.env.RAZORPAY_KEY || !process.env.RAZORPAY_SECRET) {
     throw new Error("RAZORPAY_KEY and RAZORPAY_SECRET are required")
   }
 
-  const plan = buildPlan(strategy, experimentId)
+  const scenarioPlan = buildScenarioPlan()
+  const totalOrders = ATTEMPTS_PER_STRATEGY * 2
 
-  console.log(`Creating ${plan.length} real Razorpay Test Mode orders for ${strategy}...`)
+  console.log("")
+  console.log("=== PAYMENT RECOVERY PAIRED EXPERIMENT ===")
+  console.log(`Experiment ID: ${experimentId}`)
+  console.log(`Attempts per strategy: ${ATTEMPTS_PER_STRATEGY}`)
+  console.log(`Baseline orders: ${ATTEMPTS_PER_STRATEGY}`)
+  console.log(`AI orders: ${ATTEMPTS_PER_STRATEGY}`)
+  console.log(`Total orders to create: ${totalOrders}`)
   console.log(
-    "Orders are created only. Payment success/failure must come from Razorpay Checkout using supported test credentials."
+    "Each baseline/AI pair receives the same scenarioId. Only the recovery strategy differs."
   )
+  console.log(
+    "Orders are created only. Payment success/failure must still be produced through Razorpay Checkout using supported Test Mode credentials."
+  )
+  console.log("")
 
   let createdCount = 0
 
-  for (const item of plan) {
-    const order = await createOrder(item)
-    createdCount += 1
+  for (const scenario of scenarioPlan) {
+    for (const strategy of ["baseline", "ai"]) {
+      const item = {
+        ...scenario,
+        experimentId,
+        strategy,
+      }
 
-    console.log(
-      JSON.stringify({
-        runNumber: item.runNumber,
-        strategy: item.strategy,
-        scenarioId: item.scenarioId,
-        orderId: order.id,
-        amount: order.amount,
-        currency: order.currency,
-      })
-    )
+      const order = await createOrder(item)
+      createdCount += 1
 
-    console.log(`Progress: ${createdCount}/${plan.length}`)
+      console.log(
+        JSON.stringify({
+          progress: `${createdCount}/${totalOrders}`,
+          pairNumber: item.pairNumber,
+          strategy: item.strategy,
+          scenarioId: item.scenarioId,
+          orderId: order.id,
+          amount: order.amount,
+          currency: order.currency,
+        })
+      )
 
-    if (createdCount < plan.length) {
-      await sleep(REQUEST_DELAY_MS)
+      if (createdCount < totalOrders) {
+        await sleep(REQUEST_DELAY_MS)
+      }
     }
   }
 
-  console.log(`Completed: ${createdCount}/${plan.length} orders created.`)
+  console.log("")
+  console.log("=== EXPERIMENT ORDER CREATION COMPLETE ===")
+  console.log(`Baseline orders created: ${ATTEMPTS_PER_STRATEGY}`)
+  console.log(`AI orders created: ${ATTEMPTS_PER_STRATEGY}`)
+  console.log(`Total paired orders created: ${totalOrders}`)
 }
 
-const strategy = process.argv[2]
-const experimentId = process.argv[3]
+const experimentId = process.argv[2]
 
-if (!["baseline", "ai"].includes(strategy) || !experimentId) {
-  console.log("Usage: node scripts/runExperiment.js baseline|ai experiment-id")
+if (!experimentId) {
+  console.log("Usage: node scripts/runExperiment.js <experiment-id>")
   process.exit(1)
 }
 
-createOrders(strategy, experimentId).catch((error) => {
+createPairedExperimentOrders(experimentId).catch((error) => {
   console.error("EXPERIMENT ORDER CREATION ERROR:", error.message)
   console.error(error)
   process.exit(1)
