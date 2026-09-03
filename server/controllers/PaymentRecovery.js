@@ -351,7 +351,16 @@ exports.getRecoveryAnalytics = async (req, res) => {
   try {
     const { experimentId } = req.query
 
-    const filter = experimentId ? { experimentId } : {}
+    // Analytics comparisons must be scoped to one experiment so old manual
+    // payment failures cannot contaminate baseline vs AI metrics.
+    if (!experimentId) {
+      return res.status(400).json({
+        success: false,
+        message: "experimentId is required for recovery analytics",
+      })
+    }
+
+    const filter = { experimentId }
     const records = await PaymentExperiment.find(filter).sort({ createdAt: -1 })
 
     const buildMetrics = (strategy) => {
@@ -373,7 +382,7 @@ exports.getRecoveryAnalytics = async (req, res) => {
           data.length > 0
             ? Number(((recovered.length / data.length) * 100).toFixed(2))
             : 0,
-        recoveredAmount,
+        recoveredAmount: Number(recoveredAmount.toFixed(2)),
       }
     }
 
@@ -385,7 +394,10 @@ exports.getRecoveryAnalytics = async (req, res) => {
       data: {
         baseline,
         ai,
-        incrementalRecoveredRevenue: ai.recoveredAmount - baseline.recoveredAmount,
+        incrementalRecoveredRevenue: Number(
+          (ai.recoveredAmount - baseline.recoveredAmount).toFixed(2)
+        ),
+        experimentId,
         records,
       },
     })
