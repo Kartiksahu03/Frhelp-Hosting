@@ -52,6 +52,10 @@ const userSchema = new mongoose.Schema(
 				ref: "Course",
 			},
 		],
+		recoveryOptOut: {
+			type: Boolean,
+			default: false,
+		},
 		token: {
 			type: String,
 		},
