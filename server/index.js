@@ -44,7 +44,7 @@ app.use("/api/v1/course", courseRoutes);
 app.use("/api/v1/payment", paymentRoutes);
 app.use("/api/v1/payment-recovery", paymentRecoveryRoutes);
 app.use("/api/v1/reach", contactUsRoute);
-app.use("/api/v1/AI", aiRoutes);
+app.use("/api/v1/ai", aiRoutes);
 
 app.get("/", (req, res) => {
   return res.json({
